@@ -1,0 +1,218 @@
+# example_survey.yaml
+# Example survey demonstrating all supported question types and features.
+
+version: 2
+meta:
+  name: "Example Research Survey"
+  description: "Demonstrates all question types, display logic, and flow control."
+  language: "EN"
+  project_category: "CORE"
+
+  slider_defaults:
+    min: 1
+    max: 7
+    grid_lines: 7
+    snap_to_grid: true
+    show_value: true
+
+  bipolar_defaults:
+    points: 7
+    middle_label: "Neither"
+
+# ──────────────────────────────────────────────
+# CONSENT
+# ──────────────────────────────────────────────
+consent:
+  source: inline
+  html: |
+    <h2>Consent to Participate</h2>
+    <p>You are being invited to participate in a research study. Your participation
+    is voluntary and you may withdraw at any time.</p>
+    <p>This survey will take approximately 10 minutes. The risks involved are minimal.</p>
+    <p>Questions? Contact <a href="mailto:researcher@example.edu">researcher@example.edu</a>.</p>
+
+# ──────────────────────────────────────────────
+# BLOCKS
+# ──────────────────────────────────────────────
+blocks:
+
+  # ── Screening ──────────────────────────────
+  - id: screening
+    title: "Screening"
+    questions:
+      - id: eligible
+        type: single_select
+        text: "Are you 18 years or older?"
+        choices: ["Yes", "No"]
+        force_response: true
+        screen_out:
+          condition: { selected: "No" }
+          message: "You must be 18 or older to participate. Thank you for your interest."
+
+  # ── Demographics ───────────────────────────
+  - id: demographics
+    title: "Demographics"
+    questions:
+      - id: age_range
+        type: dropdown
+        text: "What is your age range?"
+        choices:
+          - "18–24"
+          - "25–34"
+          - "35–44"
+          - "45–54"
+          - "55–64"
+          - "65 or older"
+        force_response: true
+
+      - id: gender
+        type: single_select
+        text: "What is your gender?"
+        choices:
+          - "Woman"
+          - "Man"
+          - "Nonbinary / gender diverse"
+          - "Prefer not to say"
+        force_response: true
+
+      - id: occupation
+        type: multi_select
+        text: "Which best describes your role? (Select all that apply)"
+        choices:
+          - "Student"
+          - "Researcher"
+          - "Professional"
+          - "Hobbyist"
+          - "None of the above"
+        allow_other: true
+        force_response: true
+
+  # ── Experience ─────────────────────────────
+  - id: experience
+    title: "Experience"
+    questions:
+      - id: skill_level
+        type: single_select
+        text: "How would you describe your experience level?"
+        choices:
+          - "None"
+          - "Beginner"
+          - "Intermediate"
+          - "Advanced"
+          - "Expert"
+        force_response: true
+
+      - id: tools_used
+        type: multi_select
+        text: "Which tools do you use? (Select all that apply)"
+        choices:
+          - "Tool A"
+          - "Tool B"
+          - "Tool C"
+          - "None"
+        allow_other: true
+        force_response: true
+
+      # Matrix question — proficiency grid
+      - id: proficiency_matrix
+        type: matrix
+        text: "Rate your proficiency with each tool:"
+        rows:
+          - "Tool A"
+          - "Tool B"
+          - "Tool C"
+        columns:
+          - "None"
+          - "Novice"
+          - "Intermediate"
+          - "Advanced"
+          - "Expert"
+        force_response: true
+
+  # ── Software UEQ (conditional block) ───────
+  - id: software_ueq
+    title: "Software Experience"
+    display_logic:
+      condition: { question: tools_used, is_not: "None" }
+    questions:
+      - id: sw_ueq
+        type: bipolar_group
+        title: "Rate your experience with the software:"
+        pairs:
+          - ["Annoying", "Enjoyable"]
+          - ["Unpleasant", "Pleasant"]
+          - ["Slow", "Fast"]
+          - ["Inefficient", "Efficient"]
+          - ["Confusing", "Clear"]
+          - ["Boring", "Exciting"]
+        force_response: true
+
+  # ── Perceptions (sliders) ──────────────────
+  - id: perceptions
+    title: "Perceptions"
+    questions:
+      - id: perception_sliders
+        type: slider_group
+        title: "Rate the following:"
+        items:
+          - "usefulness"
+          - "ease of use"
+          - "satisfaction"
+          - "likelihood to recommend"
+        labels:
+          left: "Not at all"
+          right: "Extremely"
+        force_response: true
+
+  # ── Priorities ─────────────────────────────
+  - id: priorities
+    title: "Priorities"
+    questions:
+      - id: top_goals
+        type: multi_select
+        text: "What are your top priorities? (Choose up to 3)"
+        choices:
+          - "Speed"
+          - "Accuracy"
+          - "Ease of use"
+          - "Cost"
+          - "Flexibility"
+          - "Support"
+          - "Integration"
+        min_choices: 1
+        max_choices: 3
+        force_response: true
+
+  # ── Follow-up ──────────────────────────────
+  - id: followup
+    title: "Follow-Up"
+    questions:
+      - id: interest
+        type: single_select
+        text: "Would you be interested in a follow-up study?"
+        choices: ["Yes", "No"]
+
+      - id: contact_email
+        type: text_entry
+        subtype: single_line
+        text: "If yes, please provide your email:"
+        display_logic:
+          condition: { question: interest, selected: "Yes" }
+
+      - id: comments
+        type: text_entry
+        text: "Any additional comments? (Optional)"
+
+# ──────────────────────────────────────────────
+# FLOW
+# ──────────────────────────────────────────────
+flow:
+  order:
+    - block: consent
+    - block: screening
+    - block: demographics
+    - block: experience
+    - block: software_ueq
+    - block: perceptions
+    - block: priorities
+    - block: followup
